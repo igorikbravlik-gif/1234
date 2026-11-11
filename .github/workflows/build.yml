@@ -1,0 +1,26 @@
+name: Build Geometry Dash
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install platformio
+      - name: Find project
+        run: |
+          find . -name platformio.ini -not -path "./.pio/*"
+          P=$(find . -name platformio.ini -not -path "./.pio/*" | head -n1)
+          if [ -z "$P" ]; then echo "platformio.ini NOT FOUND"; ls -R | head -60; exit 1; fi
+          echo "DIR=$(dirname "$P")" >> "$GITHUB_ENV"
+      - run: pio run -d "$DIR"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esp32fw
+          path: |
+            ${{ env.DIR }}/esp32fw.bin
+            ${{ env.DIR }}/.pio/build/m5stickc_plus2/firmware.bin
